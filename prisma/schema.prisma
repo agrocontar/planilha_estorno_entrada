@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model FileData {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+}
+
+
+model NotaFiscal {
+  id          Int       @id @default(autoincrement())
+  numero      String    @unique
+  dataEntrada DateTime
+  fornecedor  String
+  valor       Decimal
+  itens       Item[]
+  resumo      ResumoFiscal?
+}
+
+model Item {
+  id          Int        @id @default(autoincrement())
+  notaFiscal  NotaFiscal @relation(fields: [notaFiscalId], references: [id])
+  notaFiscalId Int
+  descricao   String
+  quantidade  Decimal
+  unidade     String
+  valor       Decimal
+  cfop        String
+}
+
+model ResumoFiscal {
+  id          Int        @id @default(autoincrement())
+  notaFiscal  NotaFiscal @relation(fields: [notaFiscalId], references: [id])
+  notaFiscalId Int       @unique
+  baseCalculo Decimal
+  aliquota    Decimal
+  icmsDestacado Decimal
+}

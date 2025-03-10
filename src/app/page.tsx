@@ -3,8 +3,15 @@ import FileUpload from "./components/FileUpload";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <FileUpload/>
-    </div>
+    <>
+      <div className="flex flex-col items-center justify-center min-h-screen py-2">
+        <FileUpload/>
+      </div>
+
+      <footer className="fixed bottom-0 left-0 w-full text-black text-center p-4 flex flex-col items-center justify-center gap-4">
+        <Image src="/logo.png.webp" alt="Agrocontar" width={100} height={100} />
+        <p className="text-sm"> © Direitos Reservados a Agrocontar</p>
+      </footer>
+    </>
   );
 }

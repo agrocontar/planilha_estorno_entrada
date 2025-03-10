@@ -24,7 +24,7 @@ model FileData {
 model NotaFiscal {
   id          Int       @id @default(autoincrement())
   numero      String    @unique
-  dataEntrada DateTime
+  dataEntrada String
   fornecedor  String
   valor       Decimal
   itens       Item[]

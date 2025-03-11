@@ -40,6 +40,9 @@ model Item {
   unidade     String
   valor       Decimal
   cfop        String
+  codigoProduto Int
+  grupo       String
+  ncm         String
 }
 
 model ResumoFiscal {

@@ -18,6 +18,7 @@ export async function processSpedFile(filePath: string) {
 
     let currentNota = null;
     const fornecedores = []
+    const produtos = []
 
     for (const line of lines) {
       const fields = line.split("|");
@@ -28,6 +29,15 @@ export async function processSpedFile(filePath: string) {
             numero: fields[2],
             nome: fields[3],
           })
+      }
+
+      //lista os produtos
+      if(fields[1] === "0200"){
+        produtos.push({
+          codigo: fields[2],
+          ncm: fields[8],
+          genero: fields[10]
+        })
       }
 
       //Busca pelos registros C100 somente entrada
@@ -50,21 +60,58 @@ export async function processSpedFile(filePath: string) {
         if(currentNota === null){
           throw new Error("Nota Fiscal não encontrada");
         }
-        // Criar os Itens da Nota Fiscal
-        await prisma.item.create({
-          data: {
-            notaFiscalId: currentNota.id,
-            descricao: fields[4],
-            quantidade: parseFloat(fields[5]),
-            unidade: fields[6],
-            valor: parseFloat(fields[7]),
-            cfop: fields[11],
-          },
-        });
+
+        const codigoProduto = fields[3];
+
+        // Busca o produto pelo código
+        const produto = produtos.find(produto => produto.codigo === codigoProduto) || {ncm: "Desconhecido", genero: "Desconhecido"};
+        const ncm = produto.ncm;
+        let grupo = '';
+
+        //Define o grupo pelo inicio do NCM
+        if(ncm.startsWith("3108")){
+          grupo = "Defensivos";
+        } else if(ncm.startsWith("3824")){
+          grupo = "Sementes";
+        }else if(ncm.startsWith("31")){
+          grupo = "Fertilizantes";
+        }
+
+        // Criar os Itens da Nota Fiscal se o NCM for válido
+        if(grupo !== ''){
+          await prisma.item.create({
+            data: {
+              notaFiscalId: currentNota.id,
+              descricao: fields[4],
+              quantidade: parseFloat(fields[5]),
+              unidade: fields[6],
+              valor: parseFloat(fields[7]),
+              cfop: fields[11],
+              codigoProduto: parseInt(fields[3]),
+              grupo,
+              ncm
+            },
+          });
+        }
+
+
+
+
+
       } else if (fields[1] === "C190" && currentNota) {
         if(currentNota === null){
           throw new Error("Nota Fiscal não encontrada");
         }
+
+        const baseCalculo = parseFloat(fields[5]);
+        let aliquota = parseFloat(fields[4]);
+        const icmsDestacado = parseFloat(fields[6]);
+
+        // Verifica se os valores são válidos
+        if (isNaN(aliquota)) {
+          aliquota = 0;
+        }
+
         // Verifica se já existe um resumo para essa nota
           const existingResumo = await prisma.resumoFiscal.findFirst({
             where: { notaFiscalId: currentNota.id }
@@ -74,9 +121,9 @@ export async function processSpedFile(filePath: string) {
             await prisma.resumoFiscal.create({
                 data: {
                     notaFiscalId: currentNota.id,
-                    baseCalculo: parseFloat(fields[5]),
-                    aliquota: parseFloat(fields[4]),
-                    icmsDestacado: parseFloat(fields[6]),
+                    baseCalculo,
+                    aliquota,
+                    icmsDestacado
                 },
             });
         }

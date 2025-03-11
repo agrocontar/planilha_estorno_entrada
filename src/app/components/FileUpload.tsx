@@ -69,8 +69,8 @@ export default function FileUpload() {
       type="file" 
       onChange={handleFileChange} 
       accept=".txt"  
-      className="bg-white text-black border-2 rounded-md p-4 border-gray-50
-                    hover:border-gray-200 hover:bg-gray-100 cursor-pointer"
+      className="bg-white text-black border-2 rounded-md p-4 border-gray-200
+                    hover:border-gray-300 hover:bg-gray-100 cursor-pointer"
       />
 
 

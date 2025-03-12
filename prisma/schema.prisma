@@ -26,7 +26,7 @@ model NotaFiscal {
   numero      String    @unique
   dataEntrada String
   fornecedor  String
-  valor       Decimal
+  valor       Int
   itens       Item[]
   resumo      ResumoFiscal?
 }
@@ -38,7 +38,7 @@ model Item {
   descricao   String
   quantidade  Decimal
   unidade     String
-  valor       Decimal
+  valor       Int 
   cfop        String
   codigoProduto Int
   grupo       String
@@ -49,7 +49,7 @@ model ResumoFiscal {
   id          Int        @id @default(autoincrement())
   notaFiscal  NotaFiscal @relation(fields: [notaFiscalId], references: [id])
   notaFiscalId Int       @unique
-  baseCalculo Decimal
-  aliquota    Decimal
-  icmsDestacado Decimal
+  baseCalculo Int 
+  aliquota    Int 
+  icmsDestacado Int
 }

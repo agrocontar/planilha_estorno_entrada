@@ -39,26 +39,39 @@ export default function FileUpload() {
         method: "POST",
         body: formData,
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Sucesso!",
-          text: "Arquivo processado com sucesso!",
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text: data.error || "Erro ao processar o arquivo",
-        });
+    
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao processar o arquivo");
       }
+    
+      // Criar um Blob a partir da resposta
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+    
+      // Criar um link temporário para download
+      const a = document.createElement("a");
+      a.href = url;
+       // Gera um nome de arquivo baseado na data atual e hora
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-'); // Formato 'YYYY-MM-DDTHH-MM-SS'
+
+      a.download = `arquivo_${timestamp}.xlsx`; // Defina o nome do arquivo
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    
+      Swal.fire({
+        icon: "success",
+        title: "Sucesso!",
+        text: "Arquivo processado e baixado com sucesso!",
+      });
+    
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Erro!",
-        text: "Erro ao processar o arquivo",
+        text: (error instanceof Error ? error.message : "Erro ao processar o arquivo"),
       });
     }
   };

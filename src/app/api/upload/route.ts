@@ -6,6 +6,7 @@ import os from "os";
 import fs from "fs/promises";
 import path from "path";
 import { processSpedFile } from "@/untils/processSped";
+import { generateFile } from "@/untils/generateFile";
 
 const tempDir = os.tmpdir(); // Retorna a pasta temporária do sistema operacional
 const tempPath = path.join(tempDir, "tempfile"); // Caminho correto
@@ -50,9 +51,24 @@ export async function POST(req: Request) {
 
     // Processar o arquivo
     const response = await processSpedFile(tempPath);
+    const arquivoPath = await generateFile()
+
+     // Lê o arquivo gerado para envio
+     const fileBuffer = await fs.readFile(arquivoPath);
+
+      // Gera um nome de arquivo baseado na data atual e hora
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, '-'); // Formato 'YYYY-MM-DDTHH-MM-SS'
+
 
     // Retorna uma resposta de sucesso
-    return NextResponse.json({ message: "Arquivo processado e salvo!", data: savedData });
+    return new NextResponse(fileBuffer, {
+      status: 200,
+      headers: {
+        "Content-Disposition": `attachment; filename="arquivo_${timestamp}.xlsx"`,
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+    });
   } catch (error) {
     // Trata erros e retorna uma resposta apropriada
     if (error instanceof Error) {

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import fs from "fs/promises";
 
 export async function processSpedFile(filePath: string) {
@@ -46,13 +47,17 @@ export async function processSpedFile(filePath: string) {
         c100Found++;
 
 
+        // Converte corretamente para centavos
+        const valorEmCentavos = parseFloat(fields[12].replace(',', '.')) * 100; 
+
+
         // Cria a Nota Fiscal
         currentNota = await prisma.notaFiscal.create({
           data: {
             numero: fields[8],
             dataEntrada: fields[11],
             fornecedor: fornecedorAtual,
-            valor: parseFloat(fields[12]),
+            valor: valorEmCentavos
           },
         });
       } else if (fields[1] === "C170" && currentNota) {
@@ -77,6 +82,9 @@ export async function processSpedFile(filePath: string) {
           grupo = "Fertilizantes";
         }
 
+        // Converte corretamente para centavos
+        const valorEmCentavos = parseFloat(fields[7].replace(',', '.')) * 100; 
+
         // Criar os Itens da Nota Fiscal se o NCM for válido
         if(grupo !== ''){
           await prisma.item.create({
@@ -85,7 +93,7 @@ export async function processSpedFile(filePath: string) {
               descricao: fields[4],
               quantidade: parseFloat(fields[5]),
               unidade: fields[6],
-              valor: parseFloat(fields[7]),
+              valor: valorEmCentavos,
               cfop: fields[11],
               codigoProduto: parseInt(fields[3]),
               grupo,
@@ -102,10 +110,14 @@ export async function processSpedFile(filePath: string) {
         if(currentNota === null){
           throw new Error("Nota Fiscal não encontrada");
         }
+        
 
-        const baseCalculo = parseFloat(fields[5]);
+        // Converte corretamente para centavos
+        const baseCalculo = parseFloat(fields[5].replace(',', '.')) * 100;
+        const icmsDestacado = parseFloat(fields[6].replace(',', '.')) * 100;
+
         let aliquota = parseFloat(fields[4]);
-        const icmsDestacado = parseFloat(fields[6]);
+
 
         // Verifica se os valores são válidos
         if (isNaN(aliquota)) {

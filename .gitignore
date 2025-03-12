@@ -20,8 +20,8 @@
 # production
 /build
 
-.bd
-
+# prisma
+.db
 
 # misc
 .DS_Store

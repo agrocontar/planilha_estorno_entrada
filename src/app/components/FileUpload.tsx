@@ -54,9 +54,9 @@ export default function FileUpload() {
       a.href = url;
        // Gera um nome de arquivo baseado na data atual e hora
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, '-'); // Formato 'YYYY-MM-DDTHH-MM-SS'
+      const timestamp = now.toLocaleDateString('pt-BR').replace(/\//g, '-'); // Formato 'DD-MM-YYYY'
 
-      a.download = `arquivo_${timestamp}.xlsx`; // Defina o nome do arquivo
+      a.download = `Planilha de Estorno Entrada  ${timestamp}.xlsx`; // Defina o nome do arquivo
       document.body.appendChild(a);
       a.click();
       a.remove();

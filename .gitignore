@@ -21,7 +21,7 @@
 /build
 
 # prisma
-.db
+.db*
 
 # misc
 .DS_Store

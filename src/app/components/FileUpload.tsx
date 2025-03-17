@@ -63,8 +63,8 @@ export default function FileUpload() {
     
       Swal.fire({
         icon: "success",
-        title: "Sucesso!",
-        text: "Arquivo processado e baixado com sucesso!",
+        title: "Arquivo processado com Sucesso!",
+        text: "A legenda dos grupos de NCM, está disponivel na documentação de usuário para consulta",
       });
     
     } catch (error) {

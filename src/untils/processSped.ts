@@ -74,12 +74,14 @@ export async function processSpedFile(filePath: string) {
         let grupo = '';
 
         //Define o grupo pelo inicio do NCM
-        if(ncm.startsWith("3108")){
+        if(ncm.startsWith("32") || ncm.startsWith("34") || ncm.startsWith("38") || ncm.startsWith("39") ){
           grupo = "Defensivos";
-        } else if(ncm.startsWith("3824")){
-          grupo = "Sementes";
-        }else if(ncm.startsWith("31")){
+        } else if(ncm.startsWith("25") || ncm.startsWith("31")){
+          grupo = "Fertilizante";
+        }else if(ncm.startsWith("10") || ncm.startsWith("12")){
           grupo = "Fertilizantes";
+        }else{
+          grupo = "Outros"
         }
 
         // Converte corretamente para centavos

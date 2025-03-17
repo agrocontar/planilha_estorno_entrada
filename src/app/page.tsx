@@ -1,11 +1,18 @@
 import Image from "next/image";
 import FileUpload from "./components/FileUpload";
+import OpenPDF from "./components/openPDF";
 
 export default function Home() {
+
+
+  
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
         <FileUpload/>
+
+        <OpenPDF  />
+        
       </div>
 
       <footer className="fixed bottom-0 left-0 w-full text-black text-center p-4 flex flex-col items-center justify-center gap-4">

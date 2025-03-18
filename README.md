@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📌 Documentação do Projeto - Planilha de Estorno de Entrada
 
-## Getting Started
+---
 
-First, run the development server:
+## 🎯 Objetivo do Projeto
+A solução automatiza o preenchimento da planilha Excel para o estorno de entrada das empresas clientes. Esse processo é realizado automaticamente a partir da leitura do arquivo SPED, reduzindo erros manuais e aumentando a eficiência do time contábil.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Funcionalidades
+✅ Leitura e processamento do arquivo SPED.  
+✅ Geração e preenchimento automático da planilha de estorno.  
+✅ Validação dos dados extraídos.  
+✅ Exportação da planilha finalizada para uso contábil.  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 👥 Público-Alvo
+👔 **Time Contábil** das empresas clientes que precisam realizar o estorno de entrada de forma eficiente e automatizada.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🏗️ Arquitetura e Stack Tecnológica
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📌 Stack Utilizada
+- **Linguagem:** Next.js
+- **Frameworks e Bibliotecas:**
+  - [ExcelJS](https://www.npmjs.com/package/exceljs) - Manipulação de arquivos Excel.
+  - [Prisma](https://www.prisma.io/) - ORM para manipulação do banco de dados.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🏛 Arquitetura da Solução
+Atualmente, a solução não segue uma arquitetura específica, sendo um script local executado conforme a necessidade.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 💻 Como Executar o Projeto
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### ✅ Requisitos
+- Node.js instalado
+- Git instalado
+
+### 🔧 Passos para Execução
+1. **Clone o repositório:**
+   ```sh
+   git clone [URL_DO_REPOSITORIO]
+   cd planilha_estorno_entrada
+   ```
+2. **Instale as dependências:**
+   ```sh
+   npm install
+   ```
+3. **Execute o script:**
+   ```sh
+   npm run dev
+   ```
+
+---
+
+## 📡 Monitoramento e Logs
+
+### 🔍 Como visualizar logs e erros?
+Enquanto o servidor está em execução, os logs são exibidos diretamente no terminal.
+
+### 📊 Como monitorar a solução?
+Os logs são gerados dinamicamente no terminal conforme o processamento dos arquivos SPED e a geração da planilha.
+
+---
+
+## 🔄 Atualização e Manutenção
+
+### 🚀 Como fazer o deploy da solução?
+A solução é um script local e não requer deploy.
+
+### 🛠️ Como gerenciar versões?
+Utilize Git para controle de versão:
+- 📌 Crie branches para novas funcionalidades e correções.
+- 📌 Utilize tags para marcar versões estáveis.
+- 📌 Realize commits frequentes e documentados.
+
+---
+
+## 📡 API e Modelagem de Dados
+
+### 🌐 A solução possui API?
+Sim, a solução segue o padrão REST para comunicação.
+
+### 📑 Qual a modelagem de dados?
+Atualmente, a solução não possui uma modelagem de dados definida.
+
+---
+
+## 📞 Contato e Suporte
+Caso tenha dúvidas ou precise de suporte, entre em contato com o time responsável.
+
+---
+
+📅 **Última atualização:** 07/02/2025
+

@@ -23,10 +23,10 @@ model FileData {
 
 model NotaFiscal {
   id          Int       @id @default(autoincrement())
-  numero      String    @unique
+  numero      String   
   dataEntrada String
   fornecedor  String
-  valor       Int
+  valor       Float
   itens       Item[]
   resumo      ResumoFiscal?
 }
@@ -38,9 +38,9 @@ model Item {
   descricao   String
   quantidade  Decimal
   unidade     String
-  valor       Int 
+  valor       Float 
   cfop        String
-  codigoProduto Int
+  codigoProduto Float
   grupo       String
   ncm         String
 }

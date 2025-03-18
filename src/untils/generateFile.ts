@@ -70,10 +70,10 @@ export async function generateFile() {
     // Popula os dados na planilha
     itens.forEach((item) => {
 
-        const valor = (item.valor / 100).toFixed(2)
-        const baseCalculo = item.notaFiscal.resumo ? (item.notaFiscal.resumo.baseCalculo / 100).toFixed(2) : "0.00";
+        const valor = (Number(item.valor) / 100).toFixed(2)
+        const baseCalculo = item.notaFiscal.resumo ? (Number(item.notaFiscal.resumo.baseCalculo) / 100).toFixed(2) : "0.00";
         const aliquota = parseInt(item.notaFiscal.resumo?.aliquota.toString() || "0");
-        const icmsDestacado = item.notaFiscal.resumo ? (item.notaFiscal.resumo.icmsDestacado / 100).toFixed(2) : "0.00";
+        const icmsDestacado = item.notaFiscal.resumo ? (Number(item.notaFiscal.resumo.icmsDestacado) / 100).toFixed(2) : "0.00";
 
         // Converte a string 'dataEntrada' para o formato 'dd/mm/yyyy'
         const dataString = item.notaFiscal.dataEntrada;

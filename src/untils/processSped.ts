@@ -126,21 +126,20 @@ export async function processSpedFile(filePath: string) {
           aliquota = 0;
         }
 
-        // Verifica se já existe um resumo para essa nota
-          const existingResumo = await prisma.resumoFiscal.findFirst({
-            where: { notaFiscalId: currentNota.id }
+        // Remover qualquer resumo anterior da mesma nota antes de inserir o novo
+        await prisma.resumoFiscal.deleteMany({
+          where: { notaFiscalId: currentNota.id },
         });
 
-        if (!existingResumo) {
-            await prisma.resumoFiscal.create({
-                data: {
-                    notaFiscalId: currentNota.id,
-                    baseCalculo,
-                    aliquota,
-                    icmsDestacado
-                },
-            });
-        }
+        // Criar o novo resumo fiscal
+        await prisma.resumoFiscal.create({
+          data: {
+            notaFiscalId: currentNota.id,
+            baseCalculo,
+            aliquota,
+            icmsDestacado
+          },
+        });
       }
     }
 

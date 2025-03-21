@@ -25,15 +25,15 @@ export async function processSpedFile(filePath: string) {
       const fields = line.split("|");
 
       //Lista os fornecedores
-      if(fields[1] === "0150"){
-          fornecedores.push({
-            numero: fields[2],
-            nome: fields[3],
-          })
+      if (fields[1] === "0150") {
+        fornecedores.push({
+          numero: fields[2],
+          nome: fields[3],
+        })
       }
 
       //lista os produtos
-      if(fields[1] === "0200"){
+      if (fields[1] === "0200") {
         produtos.push({
           codigo: fields[2],
           ncm: fields[8],
@@ -48,7 +48,7 @@ export async function processSpedFile(filePath: string) {
 
 
         // Converte corretamente para centavos
-        const valorEmCentavos = parseFloat(fields[12].replace(',', '.')) * 100; 
+        const valorEmCentavos = parseFloat(fields[12].replace(',', '.')) * 100;
 
 
         // Cria a Nota Fiscal
@@ -62,33 +62,33 @@ export async function processSpedFile(filePath: string) {
         });
       } else if (fields[1] === "C170" && currentNota) {
 
-        if(currentNota === null){
+        if (currentNota === null) {
           throw new Error("Nota Fiscal não encontrada");
         }
 
         const codigoProduto = fields[3];
 
         // Busca o produto pelo código
-        const produto = produtos.find(produto => produto.codigo === codigoProduto) || {ncm: "Desconhecido", genero: "Desconhecido"};
+        const produto = produtos.find(produto => produto.codigo === codigoProduto) || { ncm: "Desconhecido", genero: "Desconhecido" };
         const ncm = produto.ncm;
         let grupo = '';
 
         //Define o grupo pelo inicio do NCM
-        if(ncm.startsWith("32") || ncm.startsWith("34") || ncm.startsWith("38") || ncm.startsWith("39") ){
+        if (ncm.startsWith("32") || ncm.startsWith("34") || ncm.startsWith("38") || ncm.startsWith("39")) {
           grupo = "Defensivos";
-        } else if(ncm.startsWith("25") || ncm.startsWith("31")){
+        } else if (ncm.startsWith("25") || ncm.startsWith("31")) {
           grupo = "Fertilizante";
-        }else if(ncm.startsWith("10") || ncm.startsWith("12")){
+        } else if (ncm.startsWith("10") || ncm.startsWith("12")) {
           grupo = "Fertilizantes";
-        }else{
+        } else {
           grupo = "Outros"
         }
 
         // Converte corretamente para centavos
-        const valorEmCentavos = parseFloat(fields[7].replace(',', '.')) * 100; 
+        const valorEmCentavos = parseFloat(fields[7].replace(',', '.')) * 100;
 
         // Criar os Itens da Nota Fiscal se o NCM for válido
-        if(grupo !== ''){
+        if (grupo !== '') {
           await prisma.item.create({
             data: {
               notaFiscalId: currentNota.id,
@@ -109,14 +109,14 @@ export async function processSpedFile(filePath: string) {
 
 
       } else if (fields[1] === "C190" && currentNota) {
-        if(currentNota === null){
+        if (currentNota === null) {
           throw new Error("Nota Fiscal não encontrada");
         }
-        
+
 
         // Converte corretamente para centavos
-        const baseCalculo = parseFloat(fields[5].replace(',', '.')) * 100;
-        const icmsDestacado = parseFloat(fields[6].replace(',', '.')) * 100;
+        const baseCalculo = parseFloat(fields[6].replace(',', '.')) * 100;
+        const icmsDestacado = parseFloat(fields[7].replace(',', '.')) * 100;
 
         let aliquota = parseFloat(fields[4]);
 

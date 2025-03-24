@@ -77,7 +77,8 @@ export default function FileUpload() {
   };
 
   return (
-    <div className=" flex gap-2">
+    <div className=" flex gap-2 flex-col gap-2 ">
+      <span>Arquivo SPED:</span>
       <input 
       type="file" 
       onChange={handleFileChange} 

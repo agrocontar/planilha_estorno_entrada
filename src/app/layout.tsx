@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Planilha de entrada estorno",
+  title: "Planilha de Estorno - Entrada",
 };
 
 export default function RootLayout({

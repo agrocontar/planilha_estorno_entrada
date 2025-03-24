@@ -11,7 +11,7 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
 
         <h1
-        className="text-black"
+        className="text-green-800 text-4xl font-semibold pb-32"
         >Planilha de Estorno - Entrada</h1>
 
         <FileUpload/>

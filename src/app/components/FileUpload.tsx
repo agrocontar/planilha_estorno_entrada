@@ -77,18 +77,24 @@ export default function FileUpload() {
   };
 
   return (
-    <div className=" flex gap-2 flex-col gap-2 ">
+    <div className=" flex gap-0 flex-col">
       <span>Arquivo SPED:</span>
-      <input 
-      type="file" 
-      onChange={handleFileChange} 
-      accept=".txt"  
-      className="bg-white text-black border-2 rounded-md p-4 border-gray-200
-                    hover:border-gray-300 hover:bg-gray-100 cursor-pointer"
-      />
+      <div className="flex flex-row gap-2">
+        
+        <input 
+        type="file" 
+        onChange={handleFileChange} 
+        accept=".txt"  
+        className="bg-white text-black border-2 rounded-md p-4 border-gray-200
+                      hover:border-gray-300 hover:bg-gray-100 cursor-pointer  "
+        />
+
+        <button onClick={handleUpload} className="bg-green-600 text-white font-semibold px-6 rounded-sm border-2 border-green-700 hover:border-green-700 hover:bg-green-800 cursor-pointer">Enviar</button>
+
+      </div>
+      
 
 
-      <button onClick={handleUpload} className="bg-green-600 text-white font-semibold px-6  rounded-sm border-2 border-green-700 hover:border-green-700 hover:bg-green-800 cursor-pointer">Enviar</button>
     </div>
   );
 }

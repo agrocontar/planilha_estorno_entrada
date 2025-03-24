@@ -24,6 +24,7 @@
 /prisma/*.db
 /prisma/dev.db
 
+
 # misc
 .DS_Store
 *.pem

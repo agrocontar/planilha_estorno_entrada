@@ -79,7 +79,7 @@ export async function processSpedFile(filePath: string) {
         } else if (ncm.startsWith("25") || ncm.startsWith("31")) {
           grupo = "Fertilizante";
         } else if (ncm.startsWith("10") || ncm.startsWith("12")) {
-          grupo = "Fertilizantes";
+          grupo = "Semente";
         } else {
           grupo = "Outros"
         }

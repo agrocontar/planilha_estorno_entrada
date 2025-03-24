@@ -22,7 +22,7 @@
 
 # prisma
 /prisma/*.db
-
+/prisma/dev.db
 
 # misc
 .DS_Store

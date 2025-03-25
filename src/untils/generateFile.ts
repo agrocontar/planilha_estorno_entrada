@@ -102,7 +102,7 @@ export async function generateFile(): Promise<string> {
       { header: "Grupo", key: "grupo", width: 15 },
       { header: "Valor Total", key: "valorTotal", width: 15 },
       { header: "Base de Cálculo", key: "baseCalculo", width: 15 },
-      { header: "Aliquota", key: "aliquota", width: 15 },
+      { header: "Alíquota", key: "aliquota", width: 15 },
       { header: "ICMS Destacado", key: "icmsDestacado", width: 30 },
     ];
 

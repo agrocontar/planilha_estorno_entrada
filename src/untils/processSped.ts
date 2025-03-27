@@ -91,13 +91,15 @@ export async function processSpedFile(filePath: string) {
         const ncm = produto.ncm;
         let grupo = "";
 
-        if (ncm.startsWith("32") || ncm.startsWith("34") || ncm.startsWith("38") || ncm.startsWith("39")) {
+        if (ncm.startsWith("38")) {
           grupo = "Defensivos";
         } else if (ncm.startsWith("25") || ncm.startsWith("31")) {
           grupo = "Fertilizante";
         } else if (ncm.startsWith("10") || ncm.startsWith("12")) {
           grupo = "Semente";
-        } else {
+        } else if (ncm.startsWith("3002")) {
+          grupo = "Inoculante";
+        }else {
           grupo = "Outros";
         }
 

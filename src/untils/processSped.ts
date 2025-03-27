@@ -59,7 +59,7 @@ export async function processSpedFile(filePath: string) {
         });
       }
 
-      if (fields[1] === "C100" && fields[2] === "0") {
+      if (fields[1] === "C100" && fields[2] === "0" && (fields[6] === "00" || fields[6] === "01")) {
         const fornecedorAtual =
           fornecedores.find((fornecedor) => fornecedor.numero === fields[4])?.nome ||
           "Desconhecido";
@@ -144,10 +144,6 @@ export async function processSpedFile(filePath: string) {
           },
         });
       }
-    }
-
-    if (c100Found < 2) {
-      throw new Error("Registro C100 inválido: nota fiscal incompleta.");
     }
 
     console.log("Processamento finalizado!");

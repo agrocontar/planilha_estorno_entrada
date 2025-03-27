@@ -43,6 +43,8 @@ model Item {
   codigoProduto Float
   grupo       String
   ncm         String
+  icmsItem    Float
+  baseItem    Float
 }
 
 model ResumoFiscal {

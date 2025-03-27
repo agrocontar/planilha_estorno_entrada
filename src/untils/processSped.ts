@@ -59,7 +59,8 @@ export async function processSpedFile(filePath: string) {
         });
       }
 
-      if (fields[1] === "C100" && fields[2] === "0" && (fields[6] === "00" || fields[6] === "01")) {
+      // Verifica se a nota é uma entrada e se o status dela está correto
+      if (fields[1] === "C100" && fields[2] === "0" && (fields[6] === "00" || fields[6] === "01" || fields[6] === "06" || fields[6] === "07" || fields[6] === "08")) {
         const fornecedorAtual =
           fornecedores.find((fornecedor) => fornecedor.numero === fields[4])?.nome ||
           "Desconhecido";
@@ -101,6 +102,8 @@ export async function processSpedFile(filePath: string) {
         }
 
         const valorEmCentavos = parseFloat(fields[7].replace(",", ".")) * 100;
+        const ICMSEmCentavos = parseFloat(fields[15].replace(",", ".")) * 100;
+        const BaseEmCentavos = parseFloat(fields[13].replace(",", ".")) * 100;
 
         if (grupo !== "") {
           await prisma.item.create({
@@ -114,6 +117,8 @@ export async function processSpedFile(filePath: string) {
               codigoProduto: parseInt(fields[3]),
               grupo,
               ncm,
+              icmsItem: ICMSEmCentavos,
+              baseItem: BaseEmCentavos,
             },
           });
         }

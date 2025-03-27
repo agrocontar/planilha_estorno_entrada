@@ -23,6 +23,8 @@ interface Item {
   cfop: string;
   valor: number;
   grupo: string;
+  baseItem: number;
+  icmsItem: number;
   notaFiscal: NotaFiscal;
 }
 
@@ -46,6 +48,8 @@ export async function generateFile(): Promise<string> {
         cfop: true,
         valor: true,
         grupo: true,
+        icmsItem: true,
+        baseItem: true,
         notaFiscal: {
           select: {
             dataEntrada: true,
@@ -79,13 +83,15 @@ export async function generateFile(): Promise<string> {
           fornecedor: item.notaFiscal.fornecedor,
           grupo: item.grupo,
           valorTotal: 0,
-          baseCalculo: item.notaFiscal.resumo ? Number(item.notaFiscal.resumo.baseCalculo) / 100 : 0,
+          baseCalculo: 0,
           aliquota: item.notaFiscal.resumo?.aliquota || 0,
-          icmsDestacado: item.notaFiscal.resumo ? Number(item.notaFiscal.resumo.icmsDestacado) / 100 : 0,
+          icmsDestacado: 0,
         };
       }
 
       acc[chave].valorTotal += Number(item.valor) / 100;
+      acc[chave].baseCalculo += Number(item.baseItem) / 100;
+      acc[chave].icmsDestacado += Number(item.icmsItem) / 100;
       return acc;
     }, {} as Record<string, AgrupadoItem>);
 

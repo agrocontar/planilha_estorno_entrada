@@ -17,6 +17,9 @@ datasource db {
 model FileData {
   id        Int      @id @default(autoincrement())
   content   String
+  cnpj     String
+  fisrtDate String
+  lastDate  String
   createdAt DateTime @default(now())
 }
 
@@ -40,7 +43,7 @@ model Item {
   unidade     String
   valor       Float 
   cfop        String
-  codigoProduto Float
+  codigoProduto String
   grupo       String
   ncm         String
   icmsItem    Float

@@ -39,6 +39,9 @@ export default function FileUpload() {
         method: "POST",
         body: formData,
       });
+
+      const fileDataResponse = await fetch("/api/getFileData")
+      const fileData = await fileDataResponse.json();
     
       if (!response.ok) {
         const errorData = await response.json();
@@ -52,11 +55,11 @@ export default function FileUpload() {
       // Criar um link temporário para download
       const a = document.createElement("a");
       a.href = url;
-       // Gera um nome de arquivo baseado na data atual e hora
-      const now = new Date();
-      const timestamp = now.toLocaleDateString('pt-BR').replace(/\//g, '-'); // Formato 'DD-MM-YYYY'
 
-      a.download = `Planilha de Estorno Entrada  ${timestamp}.xlsx`; // Defina o nome do arquivo
+      console.log(fileData)
+      
+
+      a.download = `Planilha de Estorno Entrada - ${fileData.cnpj}.xlsx`; // Defina o nome do arquivo
       document.body.appendChild(a);
       a.click();
       a.remove();

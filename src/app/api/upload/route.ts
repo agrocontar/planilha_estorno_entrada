@@ -44,11 +44,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: validation.error.errors }, { status: 400 });
     }
 
-    // Salva os dados do arquivo no banco de dados usando Prisma
-    const savedData = await prisma.fileData.create({
-      data: { content: fileContent },
-    });
-
     // Processar o arquivo
     const response = await processSpedFile(tempPath);
     const arquivoPath = await generateFile()

@@ -28,6 +28,9 @@ export async function processSpedFile(filePath: string) {
     await prisma.resumoFiscal.deleteMany({});
     await prisma.item.deleteMany({});
     await prisma.notaFiscal.deleteMany({});
+    await prisma.fileData.deleteMany({});
+
+    
 
     const content = await fs.readFile(filePath, "utf-8");
     const lines = content.split("\n");
@@ -41,8 +44,23 @@ export async function processSpedFile(filePath: string) {
     const fornecedores = [];
     const produtos = [];
 
+    
+
     for (const line of lines) {
       const fields = line.split("|");
+
+      if(fields[1] === '0000'){
+          // Salva os dados do arquivo no banco de dados usando Prisma
+        await prisma.fileData.create({
+          data: { 
+            fisrtDate: fields[4] || "unknown",
+            lastDate: fields[5] || "unknown",
+            cnpj: fields[7] || "unknown",
+            content: content,
+
+          },
+        });
+      }
 
       if (fields[1] === "0150") {
         fornecedores.push({
@@ -116,7 +134,7 @@ export async function processSpedFile(filePath: string) {
               unidade: fields[6],
               valor: valorEmCentavos,
               cfop: fields[11],
-              codigoProduto: parseInt(fields[3]),
+              codigoProduto: fields[3],
               grupo,
               ncm,
               icmsItem: ICMSEmCentavos,

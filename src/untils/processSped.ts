@@ -39,36 +39,34 @@ export async function processSpedFile(filePath: string) {
     if (lines.length === 0) {
       throw new Error("Arquivo SPED está vazio ou não segue o formato esperado.");
     }
-
+    
     let currentNota = null;
     const fornecedores = [];
     const produtos = [];
-
-    
+    let saidaSemC170 = false;
+    let currentTipoNota = null; // 0 para entrada, 1 para saída
 
     for (const line of lines) {
       const fields = line.split("|");
-
-      if(fields[1] === '0000'){
-          // Salva os dados do arquivo no banco de dados usando Prisma
+    
+      if (fields[1] === "0000") {
         await prisma.fileData.create({
           data: { 
             fisrtDate: fields[4] || "unknown",
             lastDate: fields[5] || "unknown",
             cnpj: fields[7] || "unknown",
             content: content,
-
           },
         });
       }
-
+    
       if (fields[1] === "0150") {
         fornecedores.push({
           numero: fields[2],
           nome: fields[3],
         });
       }
-
+    
       if (fields[1] === "0200") {
         produtos.push({
           codigo: fields[2],
@@ -76,55 +74,68 @@ export async function processSpedFile(filePath: string) {
           genero: fields[10],
         });
       }
-
-      // Verifica se a nota é uma entrada e se o status dela está correto
-      if (fields[1] === "C100" && fields[2] === "0" && (fields[6] === "00" || fields[6] === "01" || fields[6] === "06" || fields[6] === "07" || fields[6] === "08")) {
-        const fornecedorAtual =
-          fornecedores.find((fornecedor) => fornecedor.numero === fields[4])?.nome ||
-          "Desconhecido";
-        c100Found++;
-
+    
+      // Entrada
+      if (fields[1] === "C100" && fields[2] === "0" && ["00", "01", "06", "07", "08"].includes(fields[6])) {
+        const fornecedorAtual = fornecedores.find(f => f.numero === fields[4])?.nome || "Desconhecido";
         const valorEmCentavos = parseFloat(fields[12].replace(",", ".")) * 100;
-
+    
         currentNota = await prisma.notaFiscal.create({
           data: {
             numero: fields[8],
             dataEntrada: fields[11],
             fornecedor: fornecedorAtual,
             valor: valorEmCentavos,
+            tipo: 0,
           },
         });
-      } else if (fields[1] === "C170" && currentNota) {
-        if (currentNota === null) {
-          throw new Error("Nota Fiscal não encontrada");
+    
+        currentTipoNota = 0; // Entrada
+      }
+    
+      // Saída
+      if (fields[1] === "C100" && fields[2] === "1" && ["00", "01", "06", "07", "08"].includes(fields[6])) {
+        if (saidaSemC170) {
+          throw new Error("Nota de saída sem registro C170! Nota: " + fields[8]);
         }
-
+    
+        const fornecedorAtual = fornecedores.find(f => f.numero === fields[4])?.nome || "Desconhecido";
+        const valorEmCentavos = parseFloat(fields[12].replace(",", ".")) * 100;
+    
+        currentNota = await prisma.notaFiscal.create({
+          data: {
+            numero: fields[8],
+            dataEntrada: fields[11],
+            fornecedor: fornecedorAtual,
+            valor: valorEmCentavos,
+            tipo: 1,
+          },
+        });
+    
+        currentTipoNota = 1; // Saída
+        saidaSemC170 = true;
+      }
+    
+      if (fields[1] === "C170" && currentNota !== null) {
+            
         const codigoProduto = fields[3];
-
-        const produto =
-          produtos.find((produto) => produto.codigo === codigoProduto) || {
-            ncm: "Desconhecido",
-            genero: "Desconhecido",
-          };
+        const produto = produtos.find(p => p.codigo === codigoProduto) || {
+          ncm: "Desconhecido",
+          genero: "Desconhecido",
+        };
         const ncm = produto.ncm;
         let grupo = "";
-
-        if (ncm.startsWith("38")) {
-          grupo = "Defensivos";
-        } else if (ncm.startsWith("25") || ncm.startsWith("31")) {
-          grupo = "Fertilizante";
-        } else if (ncm.startsWith("10") || ncm.startsWith("12")) {
-          grupo = "Semente";
-        } else if (ncm.startsWith("3002")) {
-          grupo = "Inoculante";
-        }else {
-          grupo = "Outros";
-        }
-
+    
+        if (ncm.startsWith("38")) grupo = "Defensivos";
+        else if (ncm.startsWith("25") || ncm.startsWith("31")) grupo = "Fertilizante";
+        else if (ncm.startsWith("10") || ncm.startsWith("12")) grupo = "Semente";
+        else if (ncm.startsWith("3002")) grupo = "Inoculante";
+        else grupo = "Outros";
+    
         const valorEmCentavos = parseFloat(fields[7].replace(",", ".")) * 100;
         const ICMSEmCentavos = parseFloat(fields[15].replace(",", ".")) * 100;
         const BaseEmCentavos = parseFloat(fields[13].replace(",", ".")) * 100;
-
+    
         if (grupo !== "") {
           await prisma.item.create({
             data: {
@@ -139,27 +150,27 @@ export async function processSpedFile(filePath: string) {
               ncm,
               icmsItem: ICMSEmCentavos,
               baseItem: BaseEmCentavos,
+              codMercadoria: codigoProduto,
             },
           });
+    
+          if (currentTipoNota === 1) {
+            saidaSemC170 = false;
+          }
         }
-      } else if (fields[1] === "C190" && currentNota) {
-        if (currentNota === null) {
-          throw new Error("Nota Fiscal não encontrada");
-        }
-
+      }
+    
+      if (fields[1] === "C190" && currentNota && currentTipoNota === 0) {
         const baseCalculo = parseFloat(fields[6].replace(",", ".")) * 100;
         const icmsDestacado = parseFloat(fields[7].replace(",", ".")) * 100;
-
         let aliquota = parseFloat(fields[4]);
-
-        if (isNaN(aliquota)) {
-          aliquota = 0;
-        }
-
+    
+        if (isNaN(aliquota)) aliquota = 0;
+    
         await prisma.resumoFiscal.deleteMany({
           where: { notaFiscalId: currentNota.id },
         });
-
+    
         await prisma.resumoFiscal.create({
           data: {
             notaFiscalId: currentNota.id,
@@ -175,7 +186,8 @@ export async function processSpedFile(filePath: string) {
     return { message: "Arquivo processado e salvo no banco de dados!" };
   } catch (error) {
     console.error("Erro ao processar o SPED:", error);
-    throw new Error("Falha ao processar o arquivo SPED.");
+    return error; // Retorna o erro para o chamador
+    
   } finally {
     await releaseLock(); // Libera a fila após o processamento
   }

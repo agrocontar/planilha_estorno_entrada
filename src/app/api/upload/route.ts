@@ -46,6 +46,13 @@ export async function POST(req: Request) {
 
     // Processar o arquivo
     const response = await processSpedFile(tempPath);
+
+    // Verifica se houve erro durante o processamento
+    if (response instanceof Error) {
+      return NextResponse.json({ error: response.message }, { status: 500 });
+    }
+
+    // Verifica se o arquivo foi processado corretamente
     const arquivoPath = await generateFile()
 
      // Lê o arquivo gerado para envio

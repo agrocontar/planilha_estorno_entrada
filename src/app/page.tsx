@@ -12,7 +12,7 @@ export default function Home() {
 
         <h1
         className="text-green-800 text-4xl font-semibold pb-32"
-        >Planilha de Estorno - Entrada</h1>
+        >Planilha de Estorno - Entrada e Saída</h1>
 
         <FileUpload/>
 

@@ -30,6 +30,7 @@ model NotaFiscal {
   dataEntrada String
   fornecedor  String
   valor       Float
+  tipo        Int
   itens       Item[]
   resumo      ResumoFiscal?
 }
@@ -39,7 +40,7 @@ model Item {
   notaFiscal  NotaFiscal @relation(fields: [notaFiscalId], references: [id])
   notaFiscalId Int
   descricao   String
-  quantidade  Decimal
+  quantidade  Float
   unidade     String
   valor       Float 
   cfop        String
@@ -48,6 +49,7 @@ model Item {
   ncm         String
   icmsItem    Float
   baseItem    Float
+  codMercadoria String
 }
 
 model ResumoFiscal {

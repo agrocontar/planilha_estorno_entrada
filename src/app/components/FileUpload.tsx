@@ -45,7 +45,7 @@ export default function FileUpload() {
     
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao processar o arquivo");
+        throw new Error(errorData.error);
       }
     
       // Criar um Blob a partir da resposta
@@ -59,7 +59,7 @@ export default function FileUpload() {
       console.log(fileData)
       
 
-      a.download = `Planilha de Estorno Entrada - ${fileData.cnpj}.xlsx`; // Defina o nome do arquivo
+      a.download = `Planilha de Estorno - ${fileData.cnpj}.xlsx`; // Defina o nome do arquivo
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -74,7 +74,7 @@ export default function FileUpload() {
       Swal.fire({
         icon: "error",
         title: "Erro!",
-        text: (error instanceof Error ? error.message : "Erro ao processar o arquivo"),
+        text: String(error),
       });
     }
   };

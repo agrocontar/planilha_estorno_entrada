@@ -15,6 +15,7 @@ interface NotaFiscal {
   dataEntrada: string;
   numero: string;
   fornecedor: string;
+  tipo: number; // 0 para entrada, 1 para saída
   resumo?: NotaFiscalResumo | null; 
 }
 
@@ -26,6 +27,8 @@ interface Item {
   baseItem: number;
   icmsItem: number;
   notaFiscal: NotaFiscal;
+  quantidade: number;
+  codMercadoria: string;
 }
 
 interface AgrupadoItem {
@@ -38,6 +41,9 @@ interface AgrupadoItem {
   baseCalculo: number;
   aliquota: number;
   icmsDestacado: number;
+  mercadoria: string;
+  quantidade: number;
+  tipo: number; // 0 para entrada, 1 para saída
 }
 
 export async function generateFile(): Promise<string> {
@@ -50,11 +56,14 @@ export async function generateFile(): Promise<string> {
         grupo: true,
         icmsItem: true,
         baseItem: true,
+        quantidade: true,
+        codMercadoria: true,
         notaFiscal: {
           select: {
             dataEntrada: true,
             numero: true,
             fornecedor: true,
+            tipo: true,
             resumo: {
               select: {
                 baseCalculo: true,
@@ -79,6 +88,7 @@ export async function generateFile(): Promise<string> {
         acc[chave] = {
           dataEntrada: item.notaFiscal.dataEntrada,
           notaFiscal: item.notaFiscal.numero,
+          tipo: item.notaFiscal.tipo,
           cfop: item.cfop,
           fornecedor: item.notaFiscal.fornecedor,
           grupo: item.grupo,
@@ -86,6 +96,8 @@ export async function generateFile(): Promise<string> {
           baseCalculo: 0,
           aliquota: item.notaFiscal.resumo?.aliquota || 0,
           icmsDestacado: 0,
+          mercadoria: item.codMercadoria,
+          quantidade: item.quantidade,
         };
       }
 
@@ -97,7 +109,8 @@ export async function generateFile(): Promise<string> {
 
     // Criar um novo workbook e worksheet
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Notas Fiscais");
+    const worksheet = workbook.addWorksheet("Notas de Entrada");
+    const worksheetSaida = workbook.addWorksheet("Notas de Saida");
 
     // Definir os cabeçalhos
     worksheet.columns = [
@@ -110,6 +123,17 @@ export async function generateFile(): Promise<string> {
       { header: "Base de Cálculo", key: "baseCalculo", width: 15 },
       { header: "Alíquota", key: "aliquota", width: 15 },
       { header: "ICMS Destacado", key: "icmsDestacado", width: 30 },
+    ];
+
+    worksheetSaida.columns = [
+      { header: "Data Entrada", key: "dataEntrada", width: 15 },
+      { header: "Nota Fiscal", key: "notaFiscal", width: 20 },
+      { header: "CFOP", key: "cfop", width: 15 },
+      { header: "Fornecedor", key: "fornecedor", width: 40 },
+      { header: "Grupo", key: "grupo", width: 15 },
+      { header: "Valor Total", key: "valorTotal", width: 15 },
+      { header: "Mercadoria", key: "mercadoria", width: 15 },
+      { header: "Quantidade", key: "quantidade", width: 15 },
     ];
 
     // Estilizar os cabeçalhos
@@ -127,31 +151,72 @@ export async function generateFile(): Promise<string> {
       cell.alignment = { horizontal: "center", vertical: "middle" };
     });
 
+    //Estilos planilha de saida
+    worksheetSaida.getRow(1).eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4CAF50" }, // Cor de fundo verde
+      };
+      cell.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" }, // Cor da fonte branca
+        size: 12,
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    });
+
     // Populando a planilha com os dados agrupados
     Object.values(agrupados).forEach((item) => {
-      // Converte a string 'dataEntrada' para o formato 'dd/mm/yyyy'
-      const dataString = item.dataEntrada;
-      const dia = dataString.substring(0, 2);
-      const mes = dataString.substring(2, 4);
-      const ano = dataString.substring(4, 8);
-      const dataFormatada = `${dia}/${mes}/${ano}`;
 
-      const row = worksheet.addRow({
-        dataEntrada: dataFormatada,
-        notaFiscal: item.notaFiscal,
-        cfop: item.cfop,
-        fornecedor: item.fornecedor,
-        grupo: item.grupo,
-        valorTotal: item.valorTotal,
-        baseCalculo: item.baseCalculo,
-        aliquota: item.aliquota,
-        icmsDestacado: item.icmsDestacado,
-      });
+      if(item.tipo === 0) { 
+        const dataString = item.dataEntrada;
+        const dia = dataString.substring(0, 2);
+        const mes = dataString.substring(2, 4);
+        const ano = dataString.substring(4, 8);
+        const dataFormatada = `${dia}/${mes}/${ano}`;
 
-      // Aplica formatação numérica brasileira
-      row.getCell("valorTotal").numFmt = "#,##0.00";
-      row.getCell("baseCalculo").numFmt = "#,##0.00";
-      row.getCell("icmsDestacado").numFmt = "#,##0.00";
+        const row = worksheet.addRow({
+          dataEntrada: dataFormatada,
+          notaFiscal: item.notaFiscal,
+          cfop: item.cfop,
+          fornecedor: item.fornecedor,
+          grupo: item.grupo,
+          valorTotal: item.valorTotal,
+          baseCalculo: item.baseCalculo,
+          aliquota: item.aliquota,
+          icmsDestacado: item.icmsDestacado,
+        });
+
+        // Aplica formatação numérica brasileira
+        row.getCell("valorTotal").numFmt = "#,##0.00";
+        row.getCell("baseCalculo").numFmt = "#,##0.00";
+        row.getCell("icmsDestacado").numFmt = "#,##0.00";
+      }
+
+      //Se for uma nota de saida
+      if(item.tipo === 1) { 
+        const dataString = item.dataEntrada;
+        const dia = dataString.substring(0, 2);
+        const mes = dataString.substring(2, 4);
+        const ano = dataString.substring(4, 8);
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+
+        const row = worksheetSaida.addRow({
+          dataEntrada: dataFormatada,
+          notaFiscal: item.notaFiscal,
+          cfop: item.cfop,
+          fornecedor: item.fornecedor,
+          grupo: item.grupo,
+          valorTotal: item.valorTotal,
+          mercadoria: item.mercadoria,
+          quantidade: item.quantidade,
+        });
+
+        // Aplica formatação numérica brasileira
+        row.getCell("valorTotal").numFmt = "#,##0.00";
+      }
+      
     });
 
     // Define um caminho temporário para salvar o arquivo

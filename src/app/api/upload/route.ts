@@ -25,9 +25,6 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const tipoNotaSelecionado = formData.get("tipoNotaSelecionado") as string;
-
-    console.table({ file, tipoNotaSelecionado });
-
     // Verifica se o arquivo e o tipo foram enviados
     if (!file || !tipoNotaSelecionado) {
       console.log("Arquivo ou tipo de nota não enviados")

@@ -21,7 +21,7 @@ export default function FileUpload() {
       Swal.fire({
         icon: "info",
         title: "Atenção!",
-        text: "Para gerar a planilha de Estorno Saída, o arquivo deve comtemplar os registros C170 nas notas de Saída!",
+        text: "Para gerar a planilha de Estorno Saída, o arquivo deve contemplar os registros C170 nas notas de Saída!",
       });
     }
   };

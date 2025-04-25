@@ -18,7 +18,7 @@ async function releaseLock() {
   await prisma.processingLock.deleteMany(); // Remove todos os locks
 }
 
-export async function processSpedFile(filePath: string) {
+export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0" | "1") {
   try {
     await acquireLock(); // Aguarda a liberação e adquire o lock
 
@@ -74,31 +74,18 @@ export async function processSpedFile(filePath: string) {
           genero: fields[10],
         });
       }
-    
-      // Entrada
-      if (fields[1] === "C100" && fields[2] === "0" && ["00", "01", "06", "07", "08"].includes(fields[6])) {
-        const fornecedorAtual = fornecedores.find(f => f.numero === fields[4])?.nome || "Desconhecido";
-        const valorEmCentavos = parseFloat(fields[12].replace(",", ".")) * 100;
-    
-        currentNota = await prisma.notaFiscal.create({
-          data: {
-            numero: fields[8],
-            dataEntrada: fields[11],
-            fornecedor: fornecedorAtual,
-            valor: valorEmCentavos,
-            tipo: 0,
-          },
-        });
-    
-        currentTipoNota = 0; // Entrada
-      }
-    
-      // Saída
-      if (fields[1] === "C100" && fields[2] === "1" && ["00", "01", "06", "07", "08"].includes(fields[6])) {
-        if (saidaSemC170) {
-          throw new Error("Nota de saída sem registro C170! Nota: " + fields[8]);
+      
+      if (
+        fields[1] === "C100" &&
+        ((tipoNotaSelecionado === "0" && fields[2] === "0") ||
+         (tipoNotaSelecionado === "1" && fields[2] === "1")) &&
+        ["00", "01", "06", "07", "08"].includes(fields[6])
+      ) {
+
+        if (saidaSemC170 && tipoNotaSelecionado === "1") {
+          throw new Error("Nota de saída sem registro C170! Nota: " + fields[8] + "\n Favor gerar o arquivo contemplando o registro C170.");
         }
-    
+
         const fornecedorAtual = fornecedores.find(f => f.numero === fields[4])?.nome || "Desconhecido";
         const valorEmCentavos = parseFloat(fields[12].replace(",", ".")) * 100;
     
@@ -108,12 +95,12 @@ export async function processSpedFile(filePath: string) {
             dataEntrada: fields[11],
             fornecedor: fornecedorAtual,
             valor: valorEmCentavos,
-            tipo: 1,
+            tipo: tipoNotaSelecionado === "0" ? 0 : 1, // 0 para entrada, 1 para saída
           },
         });
     
-        currentTipoNota = 1; // Saída
-        saidaSemC170 = true;
+        currentTipoNota = tipoNotaSelecionado === "0" ? 0 : 1; // Entrada
+        saidaSemC170 = tipoNotaSelecionado === "1"; // Se for saída, inicializa como true
       }
     
       if (fields[1] === "C170" && currentNota !== null) {

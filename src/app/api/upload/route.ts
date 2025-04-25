@@ -15,7 +15,8 @@ const tempPath = path.join(tempDir, "tempfile"); // Caminho correto
 // Define um esquema de validação para os dados usando zod
 const dataSchema = z.object({
   content: z.string().min(1, "O arquivo não pode estar vazio"),
-});
+  tipoNotaSelecionado: z.enum(["0", "1"]), 
+  });
 
 // Função assíncrona que lida com requisições POST
 export async function POST(req: Request) {
@@ -23,10 +24,15 @@ export async function POST(req: Request) {
     // Extrai os dados do formulário da requisição
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const tipoNotaSelecionado = formData.get("tipoNotaSelecionado") as string;
 
-    // Verifica se o arquivo foi enviado
-    if (!file) {
-      return NextResponse.json({ error: "Arquivo não enviado" }, { status: 400 });
+    console.table({ file, tipoNotaSelecionado });
+
+    // Verifica se o arquivo e o tipo foram enviados
+    if (!file || !tipoNotaSelecionado) {
+      console.log("Arquivo ou tipo de nota não enviados")
+      return NextResponse.json({ error: "Arquivo ou tipo de nota não enviados" }, { status: 400 });
+      
     }
 
     // Converte o arquivo para um buffer e depois para uma string
@@ -39,21 +45,22 @@ export async function POST(req: Request) {
     const fileContent = await fs.readFile(tempPath, "utf-8");
 
     // Valida o conteúdo do arquivo usando o esquema definido
-    const validation = dataSchema.safeParse({ content: fileContent });
+    const validation = dataSchema.safeParse({ content: fileContent, tipoNotaSelecionado});
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.errors }, { status: 400 });
     }
 
-    // Processar o arquivo
-    const response = await processSpedFile(tempPath);
+    // Processa o arquivo com o tipo selecionado
+    const response = await processSpedFile(tempPath, tipoNotaSelecionado as "0" | "1");
 
     // Verifica se houve erro durante o processamento
     if (response instanceof Error) {
+      console.log("Erro ao processar o arquivo:", response.message);
       return NextResponse.json({ error: response.message }, { status: 500 });
     }
 
     // Verifica se o arquivo foi processado corretamente
-    const arquivoPath = await generateFile()
+    const arquivoPath = await generateFile(tipoNotaSelecionado === "0" ? 0 : 1)
 
      // Lê o arquivo gerado para envio
      const fileBuffer = await fs.readFile(arquivoPath);

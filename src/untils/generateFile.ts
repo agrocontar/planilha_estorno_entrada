@@ -80,34 +80,6 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
       throw new Error("Nenhum dado disponível para exportação.");
     }
 
-    // Agrupar os itens por notaFiscal.numero e grupo
-    const agrupados: Record<string, AgrupadoItem> = itens.reduce((acc, item) => {
-      if (item.notaFiscal.tipo !== tipoNota) return acc;
-
-      const chave = `${item.notaFiscal.numero}-${item.grupo}`;
-      if (!acc[chave]) {
-        acc[chave] = {
-          dataEntrada: item.notaFiscal.dataEntrada,
-          notaFiscal: item.notaFiscal.numero,
-          tipo: item.notaFiscal.tipo,
-          cfop: item.cfop,
-          fornecedor: item.notaFiscal.fornecedor,
-          grupo: item.grupo,
-          valorTotal: 0,
-          baseCalculo: 0,
-          aliquota: item.notaFiscal.resumo?.aliquota || 0,
-          icmsDestacado: 0,
-          mercadoria: item.codMercadoria,
-          quantidade: item.quantidade,
-        };
-      }
-
-      acc[chave].valorTotal += Number(item.valor) / 100;
-      acc[chave].baseCalculo += Number(item.baseItem) / 100;
-      acc[chave].icmsDestacado += Number(item.icmsItem) / 100;
-      return acc;
-    }, {} as Record<string, AgrupadoItem>);
-
     // Criar um novo workbook e worksheet
     const workbook = new ExcelJS.Workbook();
     const nomePlanilha = tipoNota === 0 ? "Notas de Entrada" : "Notas de Saída";
@@ -131,7 +103,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           { header: "CFOP", key: "cfop", width: 15 },
           { header: "Fornecedor", key: "fornecedor", width: 40 },
           { header: "Grupo", key: "grupo", width: 15 },
-          { header: "Valor Total", key: "valorTotal", width: 15 },
+          { header: "Valor Produto", key: "valorProduto", width: 15 },
           { header: "Mercadoria", key: "mercadoria", width: 15 },
           { header: "Quantidade", key: "quantidade", width: 15 },
         ];
@@ -146,54 +118,114 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
       cell.alignment = { horizontal: "center", vertical: "middle" };
     });
 
+    if (tipoNota === 0) {
+      // Agrupar para notas de entrada
+      const agrupados: Record<string, AgrupadoItem> = itens.reduce((acc, item) => {
+        if (item.notaFiscal.tipo !== tipoNota) return acc;
 
-    // Populando a planilha com os dados agrupados
-    Object.values(agrupados).forEach((item) => {
+        const chave = `${item.notaFiscal.numero}-${item.grupo}`;
+        if (!acc[chave]) {
+          acc[chave] = {
+            dataEntrada: item.notaFiscal.dataEntrada,
+            notaFiscal: item.notaFiscal.numero,
+            tipo: item.notaFiscal.tipo,
+            cfop: item.cfop,
+            fornecedor: item.notaFiscal.fornecedor,
+            grupo: item.grupo,
+            valorTotal: 0,
+            baseCalculo: 0,
+            aliquota: item.notaFiscal.resumo?.aliquota || 0,
+            icmsDestacado: 0,
+            mercadoria: item.codMercadoria,
+            quantidade: item.quantidade,
+          };
+        }
 
+        acc[chave].valorTotal += Number(item.valor) / 100;
+        acc[chave].baseCalculo += Number(item.baseItem) / 100;
+        acc[chave].icmsDestacado += Number(item.icmsItem) / 100;
+        return acc;
+      }, {} as Record<string, AgrupadoItem>);
+
+      // Popular planilha agrupada (entrada)
+      Object.values(agrupados).forEach((item) => {
         const dataString = item.dataEntrada;
         const dia = dataString.substring(0, 2);
         const mes = dataString.substring(2, 4);
         const ano = dataString.substring(4, 8);
         const dataFormatada = `${dia}/${mes}/${ano}`;
 
-        const row = worksheet.addRow(
-        tipoNota === 0
-          ? {
-              dataEntrada: dataFormatada,
-              notaFiscal: item.notaFiscal,
-              cfop: item.cfop,
-              fornecedor: item.fornecedor,
-              grupo: item.grupo,
-              valorTotal: item.valorTotal,
-              baseCalculo: item.baseCalculo,
-              aliquota: item.aliquota,
-              icmsDestacado: item.icmsDestacado,
-            }
-          : {
-              dataEntrada: dataFormatada,
-              notaFiscal: item.notaFiscal,
-              cfop: item.cfop,
-              fornecedor: item.fornecedor,
-              grupo: item.grupo,
-              valorTotal: item.valorTotal,
-              mercadoria: item.mercadoria,
-              quantidade: item.quantidade,
-            }
-      );
-        // Aplica formatação numérica brasileira
-        row.getCell("valorTotal").numFmt = "#,##0.00";
-        if (tipoNota === 0) {
-          row.getCell("baseCalculo").numFmt = "#,##0.00";
-          row.getCell("icmsDestacado").numFmt = "#,##0.00";
-        }
-      
-    });
+        const row = worksheet.addRow({
+          dataEntrada: dataFormatada,
+          notaFiscal: item.notaFiscal,
+          cfop: item.cfop,
+          fornecedor: item.fornecedor,
+          grupo: item.grupo,
+          valorTotal: item.valorTotal,
+          baseCalculo: item.baseCalculo,
+          aliquota: item.aliquota,
+          icmsDestacado: item.icmsDestacado,
+        });
 
-    // Define um caminho temporário para salvar o arquivo
+        // Formatar valores
+        row.getCell("valorTotal").numFmt = "#,##0.00";
+        row.getCell("baseCalculo").numFmt = "#,##0.00";
+        row.getCell("icmsDestacado").numFmt = "#,##0.00";
+
+        // Centraliza a célula de dataEntrada (coluna A) e notaFiscal (coluna B)
+        row.getCell("dataEntrada").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("notaFiscal").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("cfop").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("grupo").alignment = { horizontal: "center", vertical: "middle" };
+
+        // Define a altura de todas as linhas (por exemplo, 25 de altura)
+        worksheet.eachRow((row) => {
+          row.height = 25;
+        });
+      });
+
+    } else if(tipoNota === 1) {
+      // Sem agrupamento para notas de saída
+      itens.forEach((item) => {
+        if (item.notaFiscal.tipo !== tipoNota) return;
+
+        const dataString = item.notaFiscal.dataEntrada;
+        const dia = dataString.substring(0, 2);
+        const mes = dataString.substring(2, 4);
+        const ano = dataString.substring(4, 8);
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+
+        const row = worksheet.addRow({
+          dataEntrada: dataFormatada,
+          notaFiscal: item.notaFiscal.numero,
+          cfop: item.cfop,
+          fornecedor: item.notaFiscal.fornecedor,
+          grupo: item.grupo,
+          valorProduto: Number(item.valor) / 100,
+          mercadoria: item.codMercadoria,
+          quantidade: item.quantidade,
+        });
+
+        // Formatar valores
+        row.getCell("valorProduto").numFmt = "#,##0.00";
+
+        // Centraliza a célula de dataEntrada (coluna A) e notaFiscal (coluna B)
+        row.getCell("dataEntrada").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("notaFiscal").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("cfop").alignment = { horizontal: "center", vertical: "middle" };
+        row.getCell("grupo").alignment = { horizontal: "center", vertical: "middle" };
+
+        // Define a altura de todas as linhas (por exemplo, 25 de altura)
+        worksheet.eachRow((row) => {
+          row.height = 25;
+        });
+      });
+    }
+
+    // Salvar o arquivo temporário
     const tempDir = os.tmpdir();
     const filePath = path.join(tempDir, "Estorno.xlsx");
 
-    // Salva o arquivo Excel
     await workbook.xlsx.writeFile(filePath);
 
     return filePath;

@@ -30,8 +30,6 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
     await prisma.notaFiscal.deleteMany({});
     await prisma.fileData.deleteMany({});
 
-    
-
     const content = await fs.readFile(filePath, "utf-8");
     const lines = content.split("\n");
     let c100Found = 0;
@@ -112,8 +110,9 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
         };
         const ncm = produto.ncm;
         let grupo = "";
-    
-        if (ncm.startsWith("38")) grupo = "Defensivos";
+        
+        if (ncm.startsWith("38249977")) grupo = "Fertilizante";
+        else if (ncm.startsWith("38")) grupo = "Defensivos";
         else if (ncm.startsWith("25") || ncm.startsWith("31")) grupo = "Fertilizante";
         else if (ncm.startsWith("10") || ncm.startsWith("12")) grupo = "Semente";
         else if (ncm.startsWith("3002")) grupo = "Inoculante";

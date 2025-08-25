@@ -122,6 +122,7 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
         const ICMSEmCentavos = parseFloat(fields[15].replace(",", ".")) * 100;
         const BaseEmCentavos = parseFloat(fields[13].replace(",", ".")) * 100;
         const aliquota = parseFloat(fields[14]);
+        console.log('aliquota', aliquota)
     
         if (grupo !== "") {
           await prisma.item.create({
@@ -138,7 +139,7 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
               icmsItem: ICMSEmCentavos,
               baseItem: BaseEmCentavos,
               codMercadoria: codigoProduto,
-              aliquota,
+              aliquota: isNaN(aliquota) ? 0 : aliquota,
             },
           });
     

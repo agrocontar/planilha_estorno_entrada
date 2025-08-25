@@ -138,9 +138,9 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           fornecedor: item.notaFiscal.fornecedor,
           grupo: item.grupo,
           valorTotal: Number(item.valor) / 100,
-          baseCalculo: Number(item.notaFiscal.resumo?.baseCalculo) / 100,
+          baseCalculo: Number(item.baseItem) / 100,
           aliquota: item.aliquota,
-          icmsDestacado: Number(item.notaFiscal.resumo?.icmsDestacado) / 100,
+          icmsDestacado: Number(item.icmsItem) / 100,
         });
 
         // Formatar valores

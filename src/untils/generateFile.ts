@@ -29,6 +29,7 @@ interface Item {
   notaFiscal: NotaFiscal;
   quantidade: number;
   codMercadoria: string;
+  aliquota: number;
 }
 
 interface AgrupadoItem {
@@ -58,6 +59,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
         baseItem: true,
         quantidade: true,
         codMercadoria: true,
+        aliquota: true,
         notaFiscal: {
           select: {
             dataEntrada: true,
@@ -119,37 +121,11 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
     });
 
     if (tipoNota === 0) {
-      // Agrupar para notas de entrada
-      const agrupados: Record<string, AgrupadoItem> = itens.reduce((acc, item) => {
-        if (item.notaFiscal.tipo !== tipoNota) return acc;
 
-        const chave = `${item.notaFiscal.numero}-${item.grupo}`;
-        if (!acc[chave]) {
-          acc[chave] = {
-            dataEntrada: item.notaFiscal.dataEntrada,
-            notaFiscal: item.notaFiscal.numero,
-            tipo: item.notaFiscal.tipo,
-            cfop: item.cfop,
-            fornecedor: item.notaFiscal.fornecedor,
-            grupo: item.grupo,
-            valorTotal: 0,
-            baseCalculo: 0,
-            aliquota: item.notaFiscal.resumo?.aliquota || 0,
-            icmsDestacado: 0,
-            mercadoria: item.codMercadoria,
-            quantidade: item.quantidade,
-          };
-        }
+      itens.forEach( item => {
+        if (item.notaFiscal.tipo !== tipoNota) return;
 
-        acc[chave].valorTotal += Number(item.valor) / 100;
-        acc[chave].baseCalculo += Number(item.baseItem) / 100;
-        acc[chave].icmsDestacado += Number(item.icmsItem) / 100;
-        return acc;
-      }, {} as Record<string, AgrupadoItem>);
-
-      // Popular planilha agrupada (entrada)
-      Object.values(agrupados).forEach((item) => {
-        const dataString = item.dataEntrada;
+        const dataString = item.notaFiscal.dataEntrada;
         const dia = dataString.substring(0, 2);
         const mes = dataString.substring(2, 4);
         const ano = dataString.substring(4, 8);
@@ -157,14 +133,14 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
 
         const row = worksheet.addRow({
           dataEntrada: dataFormatada,
-          notaFiscal: item.notaFiscal,
+          notaFiscal: item.notaFiscal.numero,
           cfop: item.cfop,
-          fornecedor: item.fornecedor,
+          fornecedor: item.notaFiscal.fornecedor,
           grupo: item.grupo,
-          valorTotal: item.valorTotal,
-          baseCalculo: item.baseCalculo,
+          valorTotal: Number(item.valor) / 100,
+          baseCalculo: Number(item.baseItem) / 100,
           aliquota: item.aliquota,
-          icmsDestacado: item.icmsDestacado,
+          icmsDestacado: Number(item.icmsItem) / 100,
         });
 
         // Formatar valores
@@ -182,7 +158,9 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
         worksheet.eachRow((row) => {
           row.height = 25;
         });
-      });
+
+      })
+
 
     } else if(tipoNota === 1) {
       // Sem agrupamento para notas de saída

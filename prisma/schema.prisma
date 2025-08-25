@@ -50,6 +50,7 @@ model Item {
   icmsItem    Float
   baseItem    Float
   codMercadoria String
+  aliquota Int @default(0)
 }
 
 model ResumoFiscal {

@@ -30,6 +30,7 @@ interface Item {
   quantidade: number;
   codMercadoria: string;
   aliquota: number;
+  ncm: string;
 }
 
 interface AgrupadoItem {
@@ -60,6 +61,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
         quantidade: true,
         codMercadoria: true,
         aliquota: true,
+        ncm:true,
         notaFiscal: {
           select: {
             dataEntrada: true,
@@ -93,6 +95,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           { header: "Nota Fiscal", key: "notaFiscal", width: 20 },
           { header: "CFOP", key: "cfop", width: 15 },
           { header: "Fornecedor", key: "fornecedor", width: 40 },
+          { header: "Ncm", key: "ncm", width: 15 },
           { header: "Grupo", key: "grupo", width: 15 },
           { header: "Valor Total", key: "valorTotal", width: 15 },
           { header: "Base de Cálculo", key: "baseCalculo", width: 15 },
@@ -104,6 +107,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           { header: "Nota Fiscal", key: "notaFiscal", width: 20 },
           { header: "CFOP", key: "cfop", width: 15 },
           { header: "Fornecedor", key: "fornecedor", width: 40 },
+          { header: "Ncm", key: "ncm", width: 15 },
           { header: "Grupo", key: "grupo", width: 15 },
           { header: "Valor Produto", key: "valorProduto", width: 15 },
           { header: "Mercadoria", key: "mercadoria", width: 15 },
@@ -141,6 +145,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           baseCalculo: Number(item.baseItem) / 100,
           aliquota: item.aliquota || 0,
           icmsDestacado: Number(item.icmsItem) / 100,
+          ncm: item.ncm
         });
 
         // Formatar valores
@@ -182,6 +187,7 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           valorProduto: Number(item.valor) / 100,
           mercadoria: item.codMercadoria,
           quantidade: item.quantidade,
+          ncm: item.ncm
         });
 
         // Formatar valores

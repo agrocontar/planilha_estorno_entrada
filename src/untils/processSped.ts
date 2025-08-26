@@ -37,19 +37,20 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
     if (lines.length === 0) {
       throw new Error("Arquivo SPED está vazio ou não segue o formato esperado.");
     }
-    
+
     let currentNota = null;
     const fornecedores = [];
     const produtos = [];
-    let saidaSemC170 = false;
+
     let currentTipoNota = null; // 0 para entrada, 1 para saída
+    let temC170 = false;
 
     for (const line of lines) {
       const fields = line.split("|");
-    
+
       if (fields[1] === "0000") {
         await prisma.fileData.create({
-          data: { 
+          data: {
             fisrtDate: fields[4] || "unknown",
             lastDate: fields[5] || "unknown",
             cnpj: fields[7] || "unknown",
@@ -57,14 +58,14 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
           },
         });
       }
-    
+
       if (fields[1] === "0150") {
         fornecedores.push({
           numero: fields[2],
           nome: fields[3],
         });
       }
-    
+
       if (fields[1] === "0200") {
         produtos.push({
           codigo: fields[2],
@@ -72,21 +73,27 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
           genero: fields[10],
         });
       }
-      
+
       if (
         fields[1] === "C100" &&
         ((tipoNotaSelecionado === "0" && fields[2] === "0") ||
-         (tipoNotaSelecionado === "1" && fields[2] === "1")) &&
+          (tipoNotaSelecionado === "1" && fields[2] === "1")) &&
         ["00", "01", "06", "07", "08"].includes(fields[6])
       ) {
 
-        if (saidaSemC170 && tipoNotaSelecionado === "1") {
-          throw new Error("Nota de saída sem registro C170! Nota: " + fields[8] + "\n Favor gerar o arquivo contemplando o registro C170.");
+        // Se já havia uma nota em aberto, verifica se tinha C170
+        if (currentNota) {
+            if (!temC170) {
+              // Remove nota de saída sem C170
+              await prisma.item.deleteMany({ where: { notaFiscalId: currentNota.id } });
+              await prisma.notaFiscal.delete({ where: { id: currentNota.id } });
+            }
         }
+
 
         const fornecedorAtual = fornecedores.find(f => f.numero === fields[4])?.nome || "Desconhecido";
         const valorEmCentavos = parseFloat(fields[12].replace(",", ".")) * 100;
-    
+
         currentNota = await prisma.notaFiscal.create({
           data: {
             numero: fields[8],
@@ -96,13 +103,14 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
             tipo: tipoNotaSelecionado === "0" ? 0 : 1, // 0 para entrada, 1 para saída
           },
         });
-    
+
         currentTipoNota = tipoNotaSelecionado === "0" ? 0 : 1; // Entrada
-        saidaSemC170 = tipoNotaSelecionado === "1"; // Se for saída, inicializa como true
+        temC170 = false;
       }
-    
+
       if (fields[1] === "C170" && currentNota !== null) {
-            
+        temC170 = true;
+
         const codigoProduto = fields[3];
         const produto = produtos.find(p => p.codigo === codigoProduto) || {
           ncm: "Desconhecido",
@@ -110,20 +118,19 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
         };
         const ncm = produto.ncm;
         let grupo = "";
-        
+
         if (ncm.startsWith("38249977")) grupo = "Fertilizante";
         else if (ncm.startsWith("38")) grupo = "Defensivos";
         else if (ncm.startsWith("25") || ncm.startsWith("31")) grupo = "Fertilizante";
         else if (ncm.startsWith("10") || ncm.startsWith("12")) grupo = "Semente";
         else if (ncm.startsWith("3002")) grupo = "Inoculante";
         else grupo = "Outros";
-    
+
         const valorEmCentavos = parseFloat(fields[7].replace(",", ".")) * 100;
         const ICMSEmCentavos = parseFloat(fields[15].replace(",", ".")) * 100;
         const BaseEmCentavos = parseFloat(fields[13].replace(",", ".")) * 100;
         const aliquota = parseFloat(fields[14]);
-        console.log('aliquota', aliquota)
-    
+        
         if (grupo !== "") {
           await prisma.item.create({
             data: {
@@ -142,24 +149,30 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
               aliquota: isNaN(aliquota) ? 0 : aliquota,
             },
           });
-    
-          if (currentTipoNota === 1) {
-            saidaSemC170 = false;
-          }
         }
       }
-    
+
       if (fields[1] === "C190" && currentNota && currentTipoNota === 0) {
+        if (!temC170) {
+          // Encontrou resumo fiscal antes de C170 → descarta nota
+          await prisma.item.deleteMany({ where: { notaFiscalId: currentNota.id } });
+          await prisma.resumoFiscal.deleteMany({ where: { notaFiscalId: currentNota.id } });
+          await prisma.notaFiscal.delete({ where: { id: currentNota.id } });
+          currentNota = null;
+          temC170 = false;
+          continue; // ignora este C190
+        }
+
         const baseCalculo = parseFloat(fields[6].replace(",", ".")) * 100;
         const icmsDestacado = parseFloat(fields[7].replace(",", ".")) * 100;
         let aliquota = parseFloat(fields[4]);
-    
+
         if (isNaN(aliquota)) aliquota = 0;
-    
+
         await prisma.resumoFiscal.deleteMany({
           where: { notaFiscalId: currentNota.id },
         });
-    
+
         await prisma.resumoFiscal.create({
           data: {
             notaFiscalId: currentNota.id,
@@ -169,6 +182,11 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
           },
         });
       }
+    } 
+
+    if (currentNota && currentTipoNota === 1 && !temC170) {
+      await prisma.item.deleteMany({ where: { notaFiscalId: currentNota.id } });
+      await prisma.notaFiscal.delete({ where: { id: currentNota.id } });
     }
 
     console.log("Processamento finalizado!");
@@ -176,7 +194,7 @@ export async function processSpedFile(filePath: string, tipoNotaSelecionado: "0"
   } catch (error) {
     console.error("Erro ao processar o SPED:", error);
     return error; // Retorna o erro para o chamador
-    
+
   } finally {
     await releaseLock(); // Libera a fila após o processamento
   }

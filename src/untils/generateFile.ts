@@ -110,6 +110,8 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           { header: "Ncm", key: "ncm", width: 15 },
           { header: "Grupo", key: "grupo", width: 15 },
           { header: "Valor Produto", key: "valorProduto", width: 15 },
+          { header: "Base de Cálculo", key: "baseCalculo", width: 15 },
+          { header: "ICMS Destacado", key: "icmsDestacado", width: 30 },
           { header: "Mercadoria", key: "mercadoria", width: 15 },
           { header: "Quantidade", key: "quantidade", width: 15 },
         ];
@@ -185,6 +187,8 @@ export async function generateFile(tipoNota: 0 | 1): Promise<string> {
           fornecedor: item.notaFiscal.fornecedor,
           grupo: item.grupo,
           valorProduto: Number(item.valor) / 100,
+          icmsDestacado: Number(item.icmsItem) / 100,
+          baseCalculo: Number(item.baseItem) / 100,
           mercadoria: item.codMercadoria,
           quantidade: item.quantidade,
           ncm: item.ncm
